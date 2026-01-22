@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qaas.Mocker.CommunicationObjects", "Qaas.Mocker.CommunicationObjects\Qaas.Mocker.CommunicationObjects.csproj", "{2221E78A-2B34-408D-8FB1-D10F9C4C9CDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qaas.Mocker.CommunicationObjects.Tests", "Qaas.Mocker.CommunicationObjects.Tests\Qaas.Mocker.CommunicationObjects.Tests.csproj", "{B4566333-8900-4800-BECA-B846FEAA4FA9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2221E78A-2B34-408D-8FB1-D10F9C4C9CDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2221E78A-2B34-408D-8FB1-D10F9C4C9CDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2221E78A-2B34-408D-8FB1-D10F9C4C9CDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2221E78A-2B34-408D-8FB1-D10F9C4C9CDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4566333-8900-4800-BECA-B846FEAA4FA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4566333-8900-4800-BECA-B846FEAA4FA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4566333-8900-4800-BECA-B846FEAA4FA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4566333-8900-4800-BECA-B846FEAA4FA9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

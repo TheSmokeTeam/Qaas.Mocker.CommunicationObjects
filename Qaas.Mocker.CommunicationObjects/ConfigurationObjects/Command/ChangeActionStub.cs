@@ -8,8 +8,8 @@ namespace Qaas.Mocker.CommunicationObjects.ConfigurationObjects.Command;
 public record ChangeActionStub
 {
     [Required, Description("The Action's name that is being changed")]
-    public string ActionName { get; init; }
+    public string ActionName { get; init; } = string.Empty;
     
     [Required, Description("The Stub's Name attached to the action")]
-    public string StubName { get; init; }
+    public string StubName { get; init; } = string.Empty;
 }

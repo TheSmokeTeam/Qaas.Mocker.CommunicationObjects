@@ -6,7 +6,7 @@ namespace Qaas.Mocker.CommunicationObjects.ConfigurationObjects.Command;
 [ExcludeFromCodeCoverage]
 public record CommandRequest
 {
-    public string Id { get; init; }
+    public string Id { get; init; } = string.Empty;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public CommandType Command { get; init; }

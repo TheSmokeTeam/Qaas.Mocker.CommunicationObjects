@@ -18,6 +18,26 @@ public class CommunicationMethodsTests
         // Assert
         Assert.That(actualResult, Is.EqualTo(expectedResult));
     }
+
+    [Test]
+    public void TestCreateChannelRunnerToMocker_GenerateRoutingWithInstanceOnly_ShouldGenerateAsExpected()
+    {
+        // Act
+        var actualResult = CommunicationMethods.CreateChannelRunnerToMocker("conTent", serverInstanceName: "inStanCe");
+
+        // Assert
+        Assert.That(actualResult, Is.EqualTo("runner-to-mocker:content:instance"));
+    }
+
+    [Test]
+    public void TestCreateChannelRunnerToMocker_GenerateRoutingWithEmptyServerName_ShouldKeepEmptyBranchSegment()
+    {
+        // Act
+        var actualResult = CommunicationMethods.CreateChannelRunnerToMocker("conTent", string.Empty);
+
+        // Assert
+        Assert.That(actualResult, Is.EqualTo("runner-to-mocker:content:"));
+    }
     
     [Test, 
      TestCase("mocker-to-runner:testcontent", "tEstconteNt"),
@@ -32,9 +52,28 @@ public class CommunicationMethodsTests
         // Assert
         Assert.That(actualResult, Is.EqualTo(expectedResult));
     }
-    
-    
-    [Test, TestCase("testcontent:input", "tEstconteNt")]
+
+    [Test]
+    public void TestCreateChannelMockerToRunner_GenerateRoutingWithInstanceOnly_ShouldGenerateAsExpected()
+    {
+        // Act
+        var actualResult = CommunicationMethods.CreateChannelMockerToRunner("conTent", serverInstanceName: "inStanCe");
+
+        // Assert
+        Assert.That(actualResult, Is.EqualTo("mocker-to-runner:content:instance"));
+    }
+
+    [Test]
+    public void TestCreateChannelMockerToRunner_GenerateRoutingWithEmptyServerName_ShouldKeepEmptyBranchSegment()
+    {
+        // Act
+        var actualResult = CommunicationMethods.CreateChannelMockerToRunner("conTent", string.Empty);
+
+        // Assert
+        Assert.That(actualResult, Is.EqualTo("mocker-to-runner:content:"));
+    }
+
+    [Test, TestCase("testcontent:input", "tEstconteNt"), TestCase(":input", "")]
     public void TestCreateConsumerEndpointInput_GenerateRoutingWithGivenParameters_ShouldGenerateAsExpected(
         string expectedResult, string contentType)
     {
@@ -44,8 +83,8 @@ public class CommunicationMethodsTests
         // Assert
         Assert.That(actualResult, Is.EqualTo(expectedResult));
     }
-    
-    [Test, TestCase("testcontent:output", "tEstconteNt")]
+
+    [Test, TestCase("testcontent:output", "tEstconteNt"), TestCase(":output", "")]
     public void TestCreateConsumerEndpointOutput_GenerateRoutingWithGivenParameters_ShouldGenerateAsExpected(
         string expectedResult, string contentType)
     {

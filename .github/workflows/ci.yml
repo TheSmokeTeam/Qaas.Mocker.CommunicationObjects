@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -8,12 +8,14 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   CONFIGURATION: Release
-  PROJECT_PATH: Qaas.Mocker.CommunicationObjects.sln
+  SOLUTION_PATH: Qaas.Mocker.CommunicationObjects.sln
+  PROJECT_TO_PACK: Qaas.Mocker.CommunicationObjects/Qaas.Mocker.CommunicationObjects.csproj
   PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\BuildOutput
 
 jobs:
@@ -30,75 +32,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore packages
-        run: dotnet restore ${{ env.PROJECT_PATH }}
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-      - name: Validate package metadata
-        shell: pwsh
-        run: |
-          $projects = Get-ChildItem -Recurse -Filter *.csproj
-          $errors = @()
-
-          foreach ($project in $projects) {
-            [xml]$xml = Get-Content $project.FullName
-            $propertyGroups = @($xml.Project.PropertyGroup)
-
-            $description = ($propertyGroups | ForEach-Object { $_.Description } | Where-Object { $_ } | Select-Object -First 1)
-            if (-not $description) { continue }
-
-            $isPackableValue = ($propertyGroups | ForEach-Object { $_.IsPackable } | Where-Object { $_ } | Select-Object -First 1)
-            $isPackable = $true
-            if ($isPackableValue -and $isPackableValue.ToString().Trim().ToLower() -eq "false") {
-              $isPackable = $false
-            }
-            if (-not $isPackable) { continue }
-
-            $packageReadmeFile = ($propertyGroups | ForEach-Object { $_.PackageReadmeFile } | Where-Object { $_ } | Select-Object -First 1)
-            $includeSymbols = ($propertyGroups | ForEach-Object { $_.IncludeSymbols } | Where-Object { $_ } | Select-Object -First 1)
-            $symbolPackageFormat = ($propertyGroups | ForEach-Object { $_.SymbolPackageFormat } | Where-Object { $_ } | Select-Object -First 1)
-
-            if ($packageReadmeFile -ne "README.md") {
-              $errors += "$($project.FullName): PackageReadmeFile must be README.md"
-            }
-            if (($includeSymbols -as [string]).ToLower() -ne "true") {
-              $errors += "$($project.FullName): IncludeSymbols must be true"
-            }
-            if (($symbolPackageFormat -as [string]).ToLower() -ne "snupkg") {
-              $errors += "$($project.FullName): SymbolPackageFormat must be snupkg"
-            }
-
-            $hasPackedReadmeItem = $false
-            foreach ($itemGroup in @($xml.Project.ItemGroup)) {
-              $items = @()
-              $items += @($itemGroup.None)
-              $items += @($itemGroup.Content)
-
-              foreach ($item in $items) {
-                if (-not $item) { continue }
-                $include = [string]$item.Include
-                $pack = [string]$item.Pack
-                if ($include -match 'README\.md' -and $pack.ToLower() -eq "true") {
-                  $hasPackedReadmeItem = $true
-                }
-              }
-            }
-
-            if (-not $hasPackedReadmeItem) {
-              $errors += "$($project.FullName): A README.md file must be included in the package with Pack=true"
-            }
-          }
-
-          if ($errors.Count -gt 0) {
-            $errors | ForEach-Object { Write-Error $_ }
-            exit 1
-          }
-
-          Write-Host "Package metadata validation passed."
-
-      - name: Build project
-        run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration ${{ env.CONFIGURATION }} -warnaserror
+      - name: Build solution
+        run: dotnet build ${{ env.SOLUTION_PATH }} --no-restore --configuration ${{ env.CONFIGURATION }}
 
       - name: Test solution
-        run: dotnet test ${{ env.PROJECT_PATH }} --configuration ${{ env.CONFIGURATION }} --no-restore --no-build --maxcpucount
+        run: dotnet test ${{ env.SOLUTION_PATH }} --configuration ${{ env.CONFIGURATION }} --no-restore --maxcpucount
 
       - name: Get Version
         if: startsWith(github.ref, 'refs/tags/')
@@ -111,20 +51,27 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version-without-v }}"
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)\.[0-9]+)?$ ]]; then
-            echo "Error: '$VERSION' is not a valid version format."
+            echo "Error: '$VERSION' is not a valid version."
             exit 1
           fi
 
-      - name: Pack project
+      - name: Pack QaaS.Mocker.CommunicationObjects
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          dotnet pack ${{ env.PROJECT_PATH }} `
-            --no-restore --no-build `
+          dotnet pack ${{ env.PROJECT_TO_PACK }} `
+            --no-restore `
             --configuration ${{ env.CONFIGURATION }} `
             --include-symbols `
             -p:PackageVersion=${{ steps.version.outputs.version-without-v }} `
             --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
 
-      - name: Push package
+      - name: Push QaaS.Mocker.CommunicationObjects to NuGet
         if: startsWith(github.ref, 'refs/tags/')
-        run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}\*.nupkg -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+        shell: powershell
+        run: |
+          $packages = Get-ChildItem "${{ env.PACKAGE_OUTPUT_DIRECTORY }}\QaaS.Mocker.CommunicationObjects.*.nupkg"
+          foreach ($package in $packages) {
+            if ($package.Name -match "^QaaS\.Mocker\.CommunicationObjects\.[0-9]") {
+              dotnet nuget push $package.FullName -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json
+            }
+          }

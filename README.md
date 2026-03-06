@@ -1,104 +1,81 @@
-# QaaS Mocker Communication Objects
+# QaaS.Mocker.CommunicationObjects
 
 Shared contracts and routing helpers used as the communication layer between `QaaS.Mocker` and `QaaS.Runner`.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/TheSmokeTeam/Qaas.Mocker.CommunicationObjects/ci.yml?branch=master&label=CI&logo=github)](./.github/workflows/ci.yml)
-[![NuGet Version](https://img.shields.io/nuget/v/QaaS.Mocker.CommunicationObjects?logo=nuget&label=NuGet)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/QaaS.Mocker.CommunicationObjects?logo=nuget&label=Downloads)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects)
-[![Qaas.Mocker.CommunicationObjects coverage](https://img.shields.io/badge/Qaas.Mocker.CommunicationObjects%20coverage-100%25-brightgreen)](#test-coverage)
-[![Qaas.Mocker.CommunicationObjects.Tests coverage](https://img.shields.io/badge/Qaas.Mocker.CommunicationObjects.Tests%20coverage-98.18%25-yellowgreen)](#test-coverage)
+[![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF)](./.github/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-qaas--docs-blue)](https://thesmoketeam.github.io/qaas-docs/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
 
-## Solution Overview
+## Contents
+- [Overview](#overview)
+- [Packages](#packages)
+- [Functionalities](#functionalities)
+- [Quick Start](#quick-start)
+- [Build and Test](#build-and-test)
+- [Documentation](#documentation)
 
-This repository contains one solution:
+## Overview
+This repository contains one solution: [`Qaas.Mocker.CommunicationObjects.sln`](./Qaas.Mocker.CommunicationObjects.sln).
 
-- `Qaas.Mocker.CommunicationObjects.sln`
+The solution includes:
 
-Projects in the solution:
+- `Qaas.Mocker.CommunicationObjects` (`net10.0`): shared communication contracts and deterministic routing key builders.
+- `Qaas.Mocker.CommunicationObjects.Tests` (`net10.0`): NUnit tests for routing behavior and command request mapping.
 
-| Project | Type | Purpose | NuGet |
-|---|---|---|---|
-| `Qaas.Mocker.CommunicationObjects` | Class Library (`net10.0`) | Shared DTOs/enums and deterministic channel naming helpers for runner-mocker communication | `QaaS.Mocker.CommunicationObjects` |
-| `Qaas.Mocker.CommunicationObjects.Tests` | NUnit Test Project (`net10.0`) | Unit tests for routing and command payload behavior | Not packable |
+## Packages
+| Package | Latest Version | Total Downloads |
+|---|---|---|
+| [QaaS.Mocker.CommunicationObjects](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) | [![NuGet](https://img.shields.io/nuget/v/QaaS.Mocker.CommunicationObjects?logo=nuget)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) | [![Downloads](https://img.shields.io/nuget/dt/QaaS.Mocker.CommunicationObjects?logo=nuget)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) |
 
-## Documentation
+## Functionalities
+### Communication Routing (`CommunicationMethods`)
+- Generates routing keys for runner-to-mocker traffic via `CreateChannelRunnerToMocker`.
+- Generates routing keys for mocker-to-runner traffic via `CreateChannelMockerToRunner`.
+- Builds consumer endpoint names via `CreateConsumerEndpointInput` and `CreateConsumerEndpointOutput`.
+- Normalizes all segments to lowercase to keep routing deterministic across producers/consumers.
 
-- Product docs: [QaaS Documentation](https://thesmoketeam.github.io/qaas-docs/)
-- CI workflow: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)
-
-## Installation
-
-```xml
-<ItemGroup>
-  <PackageReference Include="QaaS.Mocker.CommunicationObjects" Version="*" />
-</ItemGroup>
-```
-
-Dependency note:
-
-- This package depends on `QaaS.Framework.SDK` (currently `1.1.0-alpha.3` in this repository).
-
-## Functionality
-
-### 1) Routing Name Builders (`CommunicationMethods`)
-
-`CommunicationMethods` provides centralized naming rules so both producer and consumer sides generate identical routing keys and queue endpoint names.
-
-- `CreateChannelRunnerToMocker(contentType, serverName?, serverInstanceName?)`
-- `CreateChannelMockerToRunner(contentType, serverName?, serverInstanceName?)`
-- `CreateConsumerEndpointInput(serverName)`
-- `CreateConsumerEndpointOutput(serverName)`
-
-Behavior:
-
-- All generated segments are normalized to lowercase.
-- Optional segments are appended in order and kept deterministic.
-- Empty string inputs are preserved as empty path segments (verified by tests).
-
-### 2) Command Contracts (`ConfigurationObjects/Command`)
-
-These records and enums model command requests/responses exchanged across services:
-
-- `CommandRequest`
+### Command Contracts (`ConfigurationObjects/Command`)
+- `CommandRequest` defines command dispatch payload with:
   - `Id`
   - `Command` (`ChangeActionStub`, `TriggerAction`, `Consume`)
-  - command-specific payload:
-    - `ChangeActionStub`
-    - `TriggerAction`
-    - `Consume`
-  - `AppendObjectToRelevantCommandConfig(object config)` assigns the matching payload object according to `Command`.
-- `CommandResponse`
+  - One command-specific payload object
+- `AppendObjectToRelevantCommandConfig` maps an object to the correct command payload based on `Command`.
+- `CommandResponse` returns command execution status with:
   - `Id`
   - `ServerInstanceId`
   - `Command`
-  - `Status` (`Succeeded`, `Failed`)
-  - `ExceptionMessage`
+  - `Status` (`Succeeded` or `Failed`)
+  - Optional `ExceptionMessage`
 
-Command payload types:
+### Command Payload Types
+- `ChangeActionStub`: identifies an action and stub pairing to change.
+- `TriggerAction`: identifies an action and optional timeout window in milliseconds.
+- `Consume`: defines timeout and optional action name with input/output `DataFilter` controls.
 
-- `ChangeActionStub`: action + stub names
-- `TriggerAction`: action name + timeout
-- `Consume`: timeout, optional action name, and input/output `DataFilter` values
-
-### 3) Ping Contracts (`ConfigurationObjects/Ping`)
-
-- `PingRequest` contains a request `Id`
+### Ping Contracts (`ConfigurationObjects/Ping`)
+- `PingRequest` carries a request id.
 - `PingResponse` returns:
   - `Id`
   - `ServerName`
   - `ServerInstanceId`
-  - `ServerInputOutputState` (`InputOutputState` enum)
+  - `ServerInputOutputState` (`InputOutputState`)
 
-### 4) Input/Output State Enum
-
-`InputOutputState` provides explicit capability flags:
+### Input/Output Capability Enum
+`InputOutputState` supports:
 
 - `NoInputOutput`
 - `OnlyInput`
 - `OnlyOutput`
 - `BothInputOutput`
 
-## Usage Example
+## Quick Start
+Install package:
+
+```bash
+dotnet add package QaaS.Mocker.CommunicationObjects
+```
+
+Use routing helpers and command contracts:
 
 ```csharp
 using Qaas.Mocker.CommunicationObjects;
@@ -110,59 +87,34 @@ var routingKey = CommunicationMethods.CreateChannelRunnerToMocker(
     serverInstanceName: "Instance-01");
 // runner-to-mocker:command:payments:instance-01
 
-var command = new CommandRequest
+var request = new CommandRequest
 {
     Id = "req-42",
     Command = CommandType.TriggerAction
 };
 
-command.AppendObjectToRelevantCommandConfig(new TriggerAction
+request.AppendObjectToRelevantCommandConfig(new TriggerAction
 {
     ActionName = "ApproveTransaction",
     TimeoutMs = 2000
 });
 ```
 
-## Test Coverage
-
-Coverage was collected on **March 6, 2026** using:
-
-```powershell
-dotnet test Qaas.Mocker.CommunicationObjects.sln --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings
-```
-
-| Project | Line Coverage | Branch Coverage |
-|---|---:|---:|
-| `Qaas.Mocker.CommunicationObjects` | `100.00%` | `100.00%` |
-| `Qaas.Mocker.CommunicationObjects.Tests` | `98.18%` | `100.00%` |
-
-Notes:
-
-- The uncovered line in test project coverage is the auto-generated `Microsoft.NET.Test.Sdk.Program.cs` entrypoint.
-- Most DTO records in the library are intentionally marked with `[ExcludeFromCodeCoverage]` to focus metrics on behavioral logic.
-
-## Build, Test, and Pack
-
-```powershell
+## Build and Test
+```bash
 dotnet restore Qaas.Mocker.CommunicationObjects.sln
-dotnet build Qaas.Mocker.CommunicationObjects.sln --configuration Release --no-restore
-dotnet test Qaas.Mocker.CommunicationObjects.sln --configuration Release --no-build
+dotnet build Qaas.Mocker.CommunicationObjects.sln -c Release --no-restore
+dotnet test Qaas.Mocker.CommunicationObjects.sln -c Release --no-build
 ```
 
-Package creation from tags is handled by CI:
+NuGet publish behavior in CI:
 
-- Supports tags: `vX.Y.Z`, `vX.Y.Z-alpha.N`, `vX.Y.Z-beta.N`
-- Publishes with `NUGET_AUTH_TOKEN`
+- `dotnet pack` and `dotnet nuget push` run on tags only.
+- Supported tag formats:
+  - `vX.Y.Z`
+  - `vX.Y.Z-alpha.N`
+  - `vX.Y.Z-beta.N`
 
-## Repository Layout
-
-```text
-.
-|- Qaas.Mocker.CommunicationObjects.sln
-|- Qaas.Mocker.CommunicationObjects/
-|  |- CommunicationMethods.cs
-|  `- ConfigurationObjects/
-|     |- Command/
-|     `- Ping/
-`- Qaas.Mocker.CommunicationObjects.Tests/
-```
+## Documentation
+- Official docs: [thesmoketeam.github.io/qaas-docs](https://thesmoketeam.github.io/qaas-docs/)
+- CI workflow: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)

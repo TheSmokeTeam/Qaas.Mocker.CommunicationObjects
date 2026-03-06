@@ -9,64 +9,42 @@ Shared contracts and routing helpers used as the communication layer between `Qa
 ## Contents
 - [Overview](#overview)
 - [Packages](#packages)
-- [Functionalities](#functionalities)
+- [Architecture](#architecture)
 - [Quick Start](#quick-start)
-- [Build and Test](#build-and-test)
 - [Documentation](#documentation)
 
 ## Overview
 This repository contains one solution: [`Qaas.Mocker.CommunicationObjects.sln`](./Qaas.Mocker.CommunicationObjects.sln).
 
-The solution includes:
+The solution is intentionally small and focused:
 
-- `Qaas.Mocker.CommunicationObjects` (`net10.0`): shared communication contracts and deterministic routing key builders.
-- `Qaas.Mocker.CommunicationObjects.Tests` (`net10.0`): NUnit tests for routing behavior and command request mapping.
+- One NuGet package project for runtime communication contracts.
+- One test project for deterministic routing and command mapping behavior.
 
 ## Packages
 | Package | Latest Version | Total Downloads |
 |---|---|---|
 | [QaaS.Mocker.CommunicationObjects](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) | [![NuGet](https://img.shields.io/nuget/v/QaaS.Mocker.CommunicationObjects?logo=nuget)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) | [![Downloads](https://img.shields.io/nuget/dt/QaaS.Mocker.CommunicationObjects?logo=nuget)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) |
 
-## Functionalities
-### Communication Routing (`CommunicationMethods`)
-- Generates routing keys for runner-to-mocker traffic via `CreateChannelRunnerToMocker`.
-- Generates routing keys for mocker-to-runner traffic via `CreateChannelMockerToRunner`.
-- Builds consumer endpoint names via `CreateConsumerEndpointInput` and `CreateConsumerEndpointOutput`.
-- Normalizes all segments to lowercase to keep routing deterministic across producers/consumers.
+## Architecture
+### [QaaS.Mocker.CommunicationObjects](./Qaas.Mocker.CommunicationObjects/)
+- `CommunicationMethods`:
+  - Creates runner-to-mocker routing keys.
+  - Creates mocker-to-runner routing keys.
+  - Creates input/output consumer endpoint names.
+  - Enforces lowercase normalization for deterministic channel naming.
+- `ConfigurationObjects/Command`:
+  - `CommandRequest` and `CommandResponse` transport command execution data.
+  - `CommandType` and `Status` define command/state enums.
+  - `ChangeActionStub`, `TriggerAction`, and `Consume` define command payload models.
+- `ConfigurationObjects/Ping`:
+  - `PingRequest` and `PingResponse` for service liveness/capability signaling.
+  - `InputOutputState` defines input/output capability states.
 
-### Command Contracts (`ConfigurationObjects/Command`)
-- `CommandRequest` defines command dispatch payload with:
-  - `Id`
-  - `Command` (`ChangeActionStub`, `TriggerAction`, `Consume`)
-  - One command-specific payload object
-- `AppendObjectToRelevantCommandConfig` maps an object to the correct command payload based on `Command`.
-- `CommandResponse` returns command execution status with:
-  - `Id`
-  - `ServerInstanceId`
-  - `Command`
-  - `Status` (`Succeeded` or `Failed`)
-  - Optional `ExceptionMessage`
-
-### Command Payload Types
-- `ChangeActionStub`: identifies an action and stub pairing to change.
-- `TriggerAction`: identifies an action and optional timeout window in milliseconds.
-- `Consume`: defines timeout and optional action name with input/output `DataFilter` controls.
-
-### Ping Contracts (`ConfigurationObjects/Ping`)
-- `PingRequest` carries a request id.
-- `PingResponse` returns:
-  - `Id`
-  - `ServerName`
-  - `ServerInstanceId`
-  - `ServerInputOutputState` (`InputOutputState`)
-
-### Input/Output Capability Enum
-`InputOutputState` supports:
-
-- `NoInputOutput`
-- `OnlyInput`
-- `OnlyOutput`
-- `BothInputOutput`
+### [QaaS.Mocker.CommunicationObjects.Tests](./Qaas.Mocker.CommunicationObjects.Tests/)
+- Validates routing generation for all communication helper methods.
+- Validates `CommandRequest.AppendObjectToRelevantCommandConfig` mapping behavior.
+- Covers valid, unknown-command, and invalid-cast command configuration scenarios.
 
 ## Quick Start
 Install package:
@@ -75,45 +53,12 @@ Install package:
 dotnet add package QaaS.Mocker.CommunicationObjects
 ```
 
-Use routing helpers and command contracts:
+Upgrade package:
 
-```csharp
-using Qaas.Mocker.CommunicationObjects;
-using Qaas.Mocker.CommunicationObjects.ConfigurationObjects.Command;
-
-var routingKey = CommunicationMethods.CreateChannelRunnerToMocker(
-    contentType: "command",
-    serverName: "Payments",
-    serverInstanceName: "Instance-01");
-// runner-to-mocker:command:payments:instance-01
-
-var request = new CommandRequest
-{
-    Id = "req-42",
-    Command = CommandType.TriggerAction
-};
-
-request.AppendObjectToRelevantCommandConfig(new TriggerAction
-{
-    ActionName = "ApproveTransaction",
-    TimeoutMs = 2000
-});
-```
-
-## Build and Test
 ```bash
-dotnet restore Qaas.Mocker.CommunicationObjects.sln
-dotnet build Qaas.Mocker.CommunicationObjects.sln -c Release --no-restore
-dotnet test Qaas.Mocker.CommunicationObjects.sln -c Release --no-build
+dotnet add package QaaS.Mocker.CommunicationObjects --version <TARGET_VERSION>
+dotnet restore
 ```
-
-NuGet publish behavior in CI:
-
-- `dotnet pack` and `dotnet nuget push` run on tags only.
-- Supported tag formats:
-  - `vX.Y.Z`
-  - `vX.Y.Z-alpha.N`
-  - `vX.Y.Z-beta.N`
 
 ## Documentation
 - Official docs: [thesmoketeam.github.io/qaas-docs](https://thesmoketeam.github.io/qaas-docs/)

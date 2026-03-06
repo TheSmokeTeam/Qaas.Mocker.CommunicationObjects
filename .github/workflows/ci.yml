@@ -32,6 +32,68 @@ jobs:
       - name: Restore packages
         run: dotnet restore ${{ env.PROJECT_PATH }}
 
+      - name: Validate package metadata
+        shell: pwsh
+        run: |
+          $projects = Get-ChildItem -Recurse -Filter *.csproj
+          $errors = @()
+
+          foreach ($project in $projects) {
+            [xml]$xml = Get-Content $project.FullName
+            $propertyGroups = @($xml.Project.PropertyGroup)
+
+            $description = ($propertyGroups | ForEach-Object { $_.Description } | Where-Object { $_ } | Select-Object -First 1)
+            if (-not $description) { continue }
+
+            $isPackableValue = ($propertyGroups | ForEach-Object { $_.IsPackable } | Where-Object { $_ } | Select-Object -First 1)
+            $isPackable = $true
+            if ($isPackableValue -and $isPackableValue.ToString().Trim().ToLower() -eq "false") {
+              $isPackable = $false
+            }
+            if (-not $isPackable) { continue }
+
+            $packageReadmeFile = ($propertyGroups | ForEach-Object { $_.PackageReadmeFile } | Where-Object { $_ } | Select-Object -First 1)
+            $includeSymbols = ($propertyGroups | ForEach-Object { $_.IncludeSymbols } | Where-Object { $_ } | Select-Object -First 1)
+            $symbolPackageFormat = ($propertyGroups | ForEach-Object { $_.SymbolPackageFormat } | Where-Object { $_ } | Select-Object -First 1)
+
+            if ($packageReadmeFile -ne "README.md") {
+              $errors += "$($project.FullName): PackageReadmeFile must be README.md"
+            }
+            if (($includeSymbols -as [string]).ToLower() -ne "true") {
+              $errors += "$($project.FullName): IncludeSymbols must be true"
+            }
+            if (($symbolPackageFormat -as [string]).ToLower() -ne "snupkg") {
+              $errors += "$($project.FullName): SymbolPackageFormat must be snupkg"
+            }
+
+            $hasPackedReadmeItem = $false
+            foreach ($itemGroup in @($xml.Project.ItemGroup)) {
+              $items = @()
+              $items += @($itemGroup.None)
+              $items += @($itemGroup.Content)
+
+              foreach ($item in $items) {
+                if (-not $item) { continue }
+                $include = [string]$item.Include
+                $pack = [string]$item.Pack
+                if ($include -match 'README\.md' -and $pack.ToLower() -eq "true") {
+                  $hasPackedReadmeItem = $true
+                }
+              }
+            }
+
+            if (-not $hasPackedReadmeItem) {
+              $errors += "$($project.FullName): A README.md file must be included in the package with Pack=true"
+            }
+          }
+
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+
+          Write-Host "Package metadata validation passed."
+
       - name: Build project
         run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration ${{ env.CONFIGURATION }} -warnaserror
 

@@ -1,23 +1,66 @@
 # QaaS.Mocker.CommunicationObjects
 
-Shared communication contracts and routing helpers used as the mediation layer between `QaaS.Mocker` and `QaaS.Runner`.
+Shared contracts and routing helpers used as the communication layer between `QaaS.Mocker` and `QaaS.Runner`.
 
-## Target Framework
+[![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF)](./.github/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-qaas--docs-blue)](https://thesmoketeam.github.io/qaas-docs/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
 
-- C# 14
-- .NET 10 (`net10.0`)
+## Contents
+- [Overview](#overview)
+- [Packages](#packages)
+- [Functionalities](#functionalities)
+- [Quick Start](#quick-start)
+- [Build and Test](#build-and-test)
+- [Documentation](#documentation)
 
-## Package & Dependencies
+## Overview
+This repository contains one solution: [`Qaas.Mocker.CommunicationObjects.sln`](./Qaas.Mocker.CommunicationObjects.sln).
 
-- NuGet package id: `QaaS.Mocker.CommunicationObjects`
-- Primary dependency: `QaaS.Framework.SDK` `1.0.0`
+The solution is split into:
 
-## CI and NuGet Publishing
+- One package project with shared communication contracts and deterministic routing key builders.
+- One test project validating routing and command payload mapping behavior.
 
-- CI workflow: `.github/workflows/ci.yml`
-- Build/test run on every push and pull request.
-- NuGet publish runs only for Git tags and requires `NUGET_AUTH_TOKEN` secret.
-- Supported release tags:
-  - `v1.2.3`
-  - `v1.2.3-alpha.1`
-  - `v1.2.3-beta.1`
+## Packages
+| Package | Latest Version | Total Downloads |
+|---|---|---|
+| [QaaS.Mocker.CommunicationObjects](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) | [![NuGet](https://img.shields.io/nuget/v/QaaS.Mocker.CommunicationObjects?logo=nuget)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) | [![Downloads](https://img.shields.io/nuget/dt/QaaS.Mocker.CommunicationObjects?logo=nuget)](https://www.nuget.org/packages?q=QaaS.Mocker.CommunicationObjects) |
+
+## Functionalities
+### [QaaS.Mocker.CommunicationObjects](./Qaas.Mocker.CommunicationObjects/)
+- `CommunicationMethods` generates runner-to-mocker and mocker-to-runner channel names.
+- `CommunicationMethods` generates input/output consumer endpoint names.
+- `CommandRequest` and `CommandResponse` define command exchange payloads.
+- `CommandType`, `Status`, and `InputOutputState` define communication state enums.
+- `ChangeActionStub`, `TriggerAction`, `Consume`, `PingRequest`, and `PingResponse` define configuration and ping contracts.
+
+### [QaaS.Mocker.CommunicationObjects.Tests](./Qaas.Mocker.CommunicationObjects.Tests/)
+- Verifies deterministic route generation and lower-casing behavior.
+- Verifies command payload assignment logic in `AppendObjectToRelevantCommandConfig`.
+- Verifies behavior for unknown command values and invalid cast scenarios.
+
+## Quick Start
+Install package:
+
+```bash
+dotnet add package QaaS.Mocker.CommunicationObjects
+```
+
+Update package:
+
+```bash
+dotnet add package QaaS.Mocker.CommunicationObjects --version <TARGET_VERSION>
+dotnet restore
+```
+
+## Build and Test
+```bash
+dotnet restore Qaas.Mocker.CommunicationObjects.sln
+dotnet build Qaas.Mocker.CommunicationObjects.sln -c Release --no-restore
+dotnet test Qaas.Mocker.CommunicationObjects.sln -c Release --no-restore --maxcpucount
+```
+
+## Documentation
+- Official docs: [thesmoketeam.github.io/qaas-docs](https://thesmoketeam.github.io/qaas-docs/)
+- CI workflow: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using QaaS.Framework.SDK.ConfigurationObjects;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace Qaas.Mocker.CommunicationObjects.ConfigurationObjects.Ping;

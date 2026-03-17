@@ -24,12 +24,7 @@ public static class CommunicationMethods
     /// <returns>A string representing the channel name.</returns>
     public static string CreateChannelRunnerToMocker(string contentType,
         string? serverName = null, string? serverInstanceName = null)
-    {
-        var channel = $"{RunnerToMockerChannelSection.ToLower()}:{contentType.ToLower()}";
-        if (serverName != null) channel += $":{serverName.ToLower()}";
-        if (serverInstanceName != null) channel += $":{serverInstanceName.ToLower()}";
-        return channel;
-    }
+        => CreateChannel(RunnerToMockerChannelSection, contentType, serverName, serverInstanceName);
 
     /// <summary>
     /// Creates a channel name for communication from the mocker to the runner.
@@ -40,12 +35,7 @@ public static class CommunicationMethods
     /// <returns>A string representing the channel name.</returns>
     public static string CreateChannelMockerToRunner(string contentType,
         string? serverName = null, string? serverInstanceName = null)
-    {
-        var channel = $"{MockerToRunnerChannelSection.ToLower()}:{contentType.ToLower()}";
-        if (serverName != null) channel += $":{serverName.ToLower()}";
-        if (serverInstanceName != null) channel += $":{serverInstanceName.ToLower()}";
-        return channel;
-    }
+        => CreateChannel(MockerToRunnerChannelSection, contentType, serverName, serverInstanceName);
 
     /// <summary>
     /// Creates a consumer endpoint name for input.
@@ -60,4 +50,12 @@ public static class CommunicationMethods
     /// <param name="serverName">The name of the server.</param>
     /// <returns>A string representing the consumer endpoint name.</returns>
     public static string CreateConsumerEndpointOutput(string serverName) => $"{serverName.ToLower()}:output";
+
+    private static string CreateChannel(string sectionName, string contentType, string? serverName, string? serverInstanceName)
+    {
+        var channel = $"{sectionName}:{contentType.ToLower()}";
+        if (serverName != null) channel += $":{serverName.ToLower()}";
+        if (serverInstanceName != null) channel += $":{serverInstanceName.ToLower()}";
+        return channel;
+    }
 }

@@ -49,6 +49,32 @@ jobs:
             echo "is_stable_tag=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Validate publish tag compatibility
+        if: steps.stable_tag.outputs.is_stable_tag == 'true'
+        shell: pwsh
+        run: |
+          [xml]$projectXml = Get-Content "${{ env.PROJECT_TO_PACK }}"
+          $frameworkSdkVersion = @($projectXml.Project.ItemGroup.PackageReference | Where-Object {
+            $_.Include -eq 'QaaS.Framework.SDK'
+          } | ForEach-Object {
+            $_.Version
+          } | Where-Object {
+            -not [string]::IsNullOrWhiteSpace($_)
+          }) | Select-Object -First 1
+
+          if ([string]::IsNullOrWhiteSpace($frameworkSdkVersion)) {
+            Write-Host "No QaaS.Framework.SDK dependency found. Skipping prerelease dependency validation."
+            exit 0
+          }
+
+          $packageVersion = "${{ steps.stable_tag.outputs.tag }}"
+          $dependsOnPrereleaseFramework = $frameworkSdkVersion.Contains('-')
+          $isPrereleaseTag = $packageVersion.Contains('-')
+
+          if ($dependsOnPrereleaseFramework -and -not $isPrereleaseTag) {
+            throw "Stable tag '$packageVersion' cannot publish while QaaS.Framework.SDK dependency '$frameworkSdkVersion' is prerelease."
+          }
+
       - name: Install coverage tools
         shell: pwsh
         run: |

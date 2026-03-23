@@ -331,7 +331,7 @@ jobs:
           retention-days: 7
 
       - name: Commit changelog updates
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.actor != 'github-actions[bot]'
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref_name != 'master' && github.actor != 'github-actions[bot]'
         shell: pwsh
         run: |
           git diff --quiet -- CHANGELOG.md

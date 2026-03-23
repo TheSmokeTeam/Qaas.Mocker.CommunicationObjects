@@ -4,6 +4,7 @@ This file is generated automatically from CI from git history.
 
 ## Unreleased
 
+- chore(deps): bump framework sdk to 1.2.8
 - docs(changelog): add automated changelog
 
 ## 2.0.2-alpha.4 - 2026-03-22

@@ -4,6 +4,10 @@ This file is generated automatically from CI from git history.
 
 ## Unreleased
 
+- fix(ci): skip changelog push on master
+
+## 2.0.3 - 2026-03-23
+
 - chore(deps): bump framework sdk to 1.2.8
 - docs(changelog): add automated changelog
 

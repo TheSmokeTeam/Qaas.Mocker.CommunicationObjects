@@ -120,6 +120,21 @@ jobs:
             echo "is_stable_tag=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Validate publish tag compatibility
+        if: steps.stable_tag.outputs.is_stable_tag == 'true'
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content "${{ env.PROJECT_TO_PACK }}"
+          $prereleaseDependencies = @($project.Project.ItemGroup.PackageReference | Where-Object {
+            $_.Version -and $_.Version.Contains('-')
+          } | ForEach-Object {
+            "$($_.Include) $($_.Version)"
+          })
+
+          if ($prereleaseDependencies.Count -gt 0) {
+            throw "Stable tag publishing is blocked because prerelease package references were found: $($prereleaseDependencies -join ', ')"
+          }
+
 
       - name: Install coverage tools
         shell: pwsh

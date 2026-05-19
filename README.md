@@ -57,8 +57,11 @@ dotnet restore
 ```
 
 ## Build and Test
+Repository restores read `QAAS_NUGET_SOURCE_URL` from `NuGet.config`.
+
 ```bash
-dotnet restore Qaas.Mocker.CommunicationObjects.sln
+export QAAS_NUGET_SOURCE_URL=https://api.nuget.org/v3/index.json
+dotnet restore Qaas.Mocker.CommunicationObjects.sln --source "$QAAS_NUGET_SOURCE_URL"
 dotnet build Qaas.Mocker.CommunicationObjects.sln -c Release --no-restore
 dotnet test Qaas.Mocker.CommunicationObjects.sln -c Release --no-restore --maxcpucount
 ```

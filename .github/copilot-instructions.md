@@ -7,4 +7,4 @@ Read `AGENTS.md` at the repo root first — it is the authoritative reference fo
 - All serialization uses `System.Text.Json` with string enum converters. Never reference `Newtonsoft.Json`.
 - Channel names are always lowercase; always use `CommunicationMethods` — never hard-code channel strings.
 - Any breaking DTO or channel change requires a **coordinated version bump** in QaaS.Runner and QaaS.Mocker simultaneously.
-- TDD (NUnit 4.x), `dotnet format` clean, conventional commits.
+- TDD (NUnit 4.x), `csharpier format <changed-files>` clean, conventional commits.

@@ -14,7 +14,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-    <PackageReference Include="QaaS.Framework.SDK" Version="1.6.1" />
+    <PackageReference Include="QaaS.Framework.SDK" Version="1.6.2" />
     </ItemGroup>
 
     <ItemGroup>
